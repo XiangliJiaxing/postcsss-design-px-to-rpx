@@ -1,26 +1,24 @@
 {
-  "name": "postcss-px-to-viewport",
-  "description": "A CSS post-processor that converts px to viewport units (vw, vh, vmin, vmax).",
-  "version": "1.1.1",
-  "author": "Dmitry Karpunin <koderfunk@gmail.com>",
+  "name": "postcss-design-px-to-rpx",
+  "description": "A CSS post-processor that converts px to uni-app units (rpx).",
+  "version": "0.0.2",
+  "author": "Xiangli Jiaxing <xianglijiaxing@163.com>",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git@github.com:evrone/postcss-px-to-viewport.git"
+    "url": "git@github.com:XiangliJiaxing/postcsss-design-px-to-rpx.git"
   },
-  "bugs": "https://github.com/evrone/postcss-px-to-viewport/issues",
-  "homepage": "https://github.com/evrone/postcss-px-to-viewport",
+  "bugs": "https://github.com/XiangliJiaxing/postcsss-design-px-to-rpx/issues",
+  "homepage": "https://github.com/XiangliJiaxing/postcsss-design-px-to-rpx",
   "main": "index.js",
   "keywords": [
     "css",
     "units",
     "pixel",
     "px",
-    "viewport",
-    "vw",
-    "vh",
-    "vmin",
-    "vmax",
+    "uniapp",
+    "rpx",
+    "upx",
     "postcss",
     "postcss-plugin"
   ],

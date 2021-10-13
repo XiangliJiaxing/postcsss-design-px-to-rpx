@@ -6,34 +6,38 @@ var { createPropListMatcher } = require('./src/prop-list-matcher');
 var { getUnitRegexp } = require('./src/pixel-unit-regexp');
 
 var defaults = {
-  unitToConvert: 'px',
-  viewportWidth: 320,
-  viewportHeight: 568, // not now used; TODO: need for different units and math for different properties
-  unitPrecision: 5,
-  viewportUnit: 'vw',
-  fontViewportUnit: 'vw',  // vmin is more suitable.
-  selectorBlackList: [],
+  unitToConvert: 'DP',
+  viewportWidth: 414,
+  unitPrecision: 8,
   propList: ['*'],
-  minPixelValue: 1,
-  mediaQuery: false,
+  viewportUnit: 'rpx', // upx
+  fontViewportUnit: 'rpx',
+  selectorBlackList: [],
   replace: true,
-  landscape: false,
-  landscapeUnit: 'vw',
-  landscapeWidth: 568
+
+
+  // mediaQuery: false,
+  // landscape: false,
+  // landscapeUnit: 'vw',
+  // landscapeWidth: 568,
+  // minPixelValue: 1
 };
 
-var ignoreNextComment = 'px-to-viewport-ignore-next';
-var ignorePrevComment = 'px-to-viewport-ignore';
+// /// 忽略下行/之后css属性标识
+// var ignoreNextComment = 'px-to-viewport-ignore-next';
+// /// 忽略同行/上一行css属性标识
+// var ignorePrevComment = 'px-to-viewport-ignore';
 
-module.exports = postcss.plugin('postcss-px-to-viewport', function (options) {
+module.exports = postcss.plugin('postcss-px-to-upx', function (options) {
   var opts = objectAssign({}, defaults, options);
 
+  /// 验证仅为正则或者正则数组
   checkRegExpOrArray(opts, 'exclude');
   checkRegExpOrArray(opts, 'include');
 
-  var pxRegex = getUnitRegexp(opts.unitToConvert);
+  var convertPxRegex = getUnitRegexp(opts.unitToConvert);
   var satisfyPropList = createPropListMatcher(opts.propList);
-  var landscapeRules = [];
+  // var landscapeRules = [];
 
   return function (css, result) {
     css.walkRules(function (rule) {
@@ -67,62 +71,67 @@ module.exports = postcss.plugin('postcss-px-to-viewport', function (options) {
 
       if (blacklistedSelector(opts.selectorBlackList, rule.selector)) return;
 
-      if (opts.landscape && !rule.parent.params) {
-        var landscapeRule = rule.clone().removeAll();
-
-        rule.walkDecls(function(decl) {
-          if (decl.value.indexOf(opts.unitToConvert) === -1) return;
-          if (!satisfyPropList(decl.prop)) return;
-
-          landscapeRule.append(decl.clone({
-            value: decl.value.replace(pxRegex, createPxReplace(opts, opts.landscapeUnit, opts.landscapeWidth))
-          }));
-        });
-
-        if (landscapeRule.nodes.length > 0) {
-          landscapeRules.push(landscapeRule);
-        }
-      }
-
-      if (!validateParams(rule.parent.params, opts.mediaQuery)) return;
+      ////////////////////////////////////////////////////////////////////////////////////////
+      // if (opts.landscape && !rule.parent.params) {
+      //   var landscapeRule = rule.clone().removeAll();
+      //
+      //   rule.walkDecls(function(decl) {
+      //     if (decl.value.indexOf(opts.unitToConvert) === -1) return;
+      //     if (!satisfyPropList(decl.prop)) return;
+      //
+      //     landscapeRule.append(decl.clone({
+      //       value: decl.value.replace(convertPxRegex, createPxReplace(opts, opts.landscapeUnit, opts.landscapeWidth))
+      //     }));
+      //   });
+      //
+      //   if (landscapeRule.nodes.length > 0) {
+      //     landscapeRules.push(landscapeRule);
+      //   }
+      // }
+      //
+      // if (!validateParams(rule.parent.params, opts.mediaQuery)) return;
+      ////////////////////////////////////////////////////////////////////////////////////////
 
       rule.walkDecls(function(decl, i) {
         if (decl.value.indexOf(opts.unitToConvert) === -1) return;
         if (!satisfyPropList(decl.prop)) return;
 
-        var prev = decl.prev();
-        // prev declaration is ignore conversion comment at same line
-        if (prev && prev.type === 'comment' && prev.text === ignoreNextComment) {
-          // remove comment
-          prev.remove();
-          return;
-        }
-        var next = decl.next();
-        // next declaration is ignore conversion comment at same line
-        if (next && next.type === 'comment' && next.text === ignorePrevComment) {
-          if (/\n/.test(next.raws.before)) {
-            result.warn('Unexpected comment /* ' + ignorePrevComment + ' */ must be after declaration at same line.', { node: next });
-          } else {
-            // remove comment
-            next.remove();
-            return;
-          }
-        }
+        // var prev = decl.prev();
+        // // prev declaration is ignore conversion comment at same line
+        // if (prev && prev.type === 'comment' && prev.text === ignoreNextComment) {
+        //   // remove comment
+        //   prev.remove();
+        //   return;
+        // }
+        // var next = decl.next();
+        // // next declaration is ignore conversion comment at same line
+        // if (next && next.type === 'comment' && next.text === ignorePrevComment) {
+        //   if (/\n/.test(next.raws.before)) {
+        //     result.warn('Unexpected comment /* ' + ignorePrevComment + ' */ must be after declaration at same line.', { node: next });
+        //   } else {
+        //     // remove comment
+        //     next.remove();
+        //     return;
+        //   }
+        // }
 
         var unit;
-        var size;
+        var rate;
         var params = rule.parent.params;
 
-        if (opts.landscape && params && params.indexOf('landscape') !== -1) {
-          unit = opts.landscapeUnit;
-          size = opts.landscapeWidth;
-        } else {
-          unit = getUnit(decl.prop, opts);
-          size = opts.viewportWidth;
-        }
+        /////////////////////////////////////////////////////////////////////////////////
+        // if (opts.landscape && params && params.indexOf('landscape') !== -1) { // todo: 横屏
+        //   unit = opts.landscapeUnit;
+        //   size = opts.landscapeWidth;
+        // } else { // 竖屏
+        unit = getUnit(decl.prop, opts);
+        rate = 750 / opts.viewportWidth;
+        // }
+        /////////////////////////////////////////////////////////////////////////////////
 
-        var value = decl.value.replace(pxRegex, createPxReplace(opts, unit, size));
+        var value = decl.value.replace(convertPxRegex, createPxReplace(opts, unit, rate));
 
+        /// 兼容直接设置的属性值
         if (declarationExists(decl.parent, decl.prop, value)) return;
 
         if (opts.replace) {
@@ -133,14 +142,14 @@ module.exports = postcss.plugin('postcss-px-to-viewport', function (options) {
       });
     });
 
-    if (landscapeRules.length > 0) {
-      var landscapeRoot = new postcss.atRule({ params: '(orientation: landscape)', name: 'media' });
-
-      landscapeRules.forEach(function(rule) {
-        landscapeRoot.append(rule);
-      });
-      css.append(landscapeRoot);
-    }
+    // if (landscapeRules.length > 0) {
+    //   var landscapeRoot = new postcss.atRule({ params: '(orientation: landscape)', name: 'media' });
+    //
+    //   landscapeRules.forEach(function(rule) {
+    //     landscapeRoot.append(rule);
+    //   });
+    //   css.append(landscapeRoot);
+    // }
   };
 });
 
@@ -148,12 +157,12 @@ function getUnit(prop, opts) {
   return prop.indexOf('font') === -1 ? opts.viewportUnit : opts.fontViewportUnit;
 }
 
-function createPxReplace(opts, viewportUnit, viewportSize) {
+function createPxReplace(opts, viewportUnit, viewportRate) {
   return function (m, $1) {
     if (!$1) return m;
     var pixels = parseFloat($1);
-    if (pixels <= opts.minPixelValue) return m;
-    var parsedVal = toFixed((pixels / viewportSize * 100), opts.unitPrecision);
+    // if (pixels <= opts.minPixelValue) return m;
+    var parsedVal = toFixed(pixels * viewportRate, opts.unitPrecision);
     return parsedVal === 0 ? '0' : parsedVal + viewportUnit;
   };
 }

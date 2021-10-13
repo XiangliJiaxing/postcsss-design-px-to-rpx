@@ -1,71 +1,45 @@
-# postcss-px-to-viewport
-[![NPM version](https://badge.fury.io/js/postcss-px-to-viewport.svg)](http://badge.fury.io/js/postcss-px-to-viewport)
+# postcss-design-px-to-rpx
+[![NPM version](https://badge.fury.io/js/postcss-design-px-to-rpx.svg)](http://badge.fury.io/js/postcss-design-px-to-rpx)
 
-English | [中文](README_CN.md) 
+[English](README.md) | [中文](README_CN.md) 
 
-A plugin for [PostCSS](https://github.com/postcss/postcss) that generates viewport units (vw, vh, vmin, vmax) from pixel units.
-
-## Demo
-
-If your project involves a fixed width, this script will help to convert pixels into viewport units.
+A plugin for [PostCSS](https://github.com/postcss/postcss) that generates uniapp units (rpx) from pixel units.
 
 ### Input
-
 ```css
-.class {
-  margin: -10px .5vh;
-  padding: 5vmin 9.5px 1px;
-  border: 3px solid black;
-  border-bottom-width: 1px;
-  font-size: 14px;
-  line-height: 20px;
-}
-
-.class2 {
-  padding-top: 10px; /* px-to-viewport-ignore */
-  /* px-to-viewport-ignore-next */
-  padding-bottom: 10px;
-  /* Any other comment */
-  border: 1px solid black;
-  margin-bottom: 1px;
-  font-size: 20px;
-  line-height: 30px;
-}
-
-@media (min-width: 750px) {
-  .class3 {
-    font-size: 16px;
-    line-height: 22px;
-  }
+.logo {
+  height: 200DP;
+  width: 200DP;
+  margin: 200DP auto 50px auto;
+  font-size: calc(16DP * var(--convert-rate));
 }
 ```
 
 ### Output
+app-plus
 ```css
-.class {
-  margin: -3.125vw .5vh;
-  padding: 5vmin 2.96875vw 1px;
-  border: 0.9375vw solid black;
-  border-bottom-width: 1px;
-  font-size: 4.375vw;
-  line-height: 6.25vw;
+.logo{
+  height:110.4rpx;
+  width:110.4rpx;
+  margin:110.4rpx auto 50px auto;
+  font-size:calc(8.832rpx * var(--convert-rate))
 }
-
-.class2 {
-  padding-top: 10px;
-  padding-bottom: 10px;
-  /* Any other comment */
-  border: 1px solid black;
-  margin-bottom: 1px;
-  font-size: 6.25vw;
-  line-height: 9.375vw;
+```
+mp-weixin: 
+```css
+.logo{
+  height:110.4rpx;
+  width:110.4rpx;
+  margin:110.4rpx auto 50px auto;
+  font-size:calc(8.832rpx * var(--convert-rate))
 }
-
-@media (min-width: 750px) {
-  .class3 {
-    font-size: 16px;
-    line-height: 22px;
-  }
+```
+h5:
+```css
+.logo[data-v-70604de4]{
+  height:%?110.4?%;width:%?110.4?%;
+  margin:%?110.4?% auto 50px auto;
+  font-size:calc(%?8.832?% * var(--convert-rate))
 }
 ```
 
@@ -74,11 +48,11 @@ If your project involves a fixed width, this script will help to convert pixels 
 ### Installation
 Add via npm
 ```
-$ npm install postcss-px-to-viewport --save-dev
+$ npm install postcss-design-px-to-rpx --save-dev
 ```
 or yarn
 ```
-$ yarn add -D postcss-px-to-viewport
+$ yarn add -D postcss-design-px-to-rpx
 ```
 
 ### Usage
@@ -86,24 +60,18 @@ $ yarn add -D postcss-px-to-viewport
 Default Options:
 ```js
 {
-  unitToConvert: 'px',
-  viewportWidth: 320,
+  unitToConvert: 'DP',
+  viewportWidth: 414,
   unitPrecision: 5,
   propList: ['*'],
-  viewportUnit: 'vw',
-  fontViewportUnit: 'vw',
+  viewportUnit: 'rpx',
+  fontViewportUnit: 'rpx',
   selectorBlackList: [],
-  minPixelValue: 1,
-  mediaQuery: false,
-  replace: true,
   exclude: undefined,
-  include: undefined,
-  landscape: false,
-  landscapeUnit: 'vw',
-  landscapeWidth: 568
+  include: undefined
 }
 ```
-- `unitToConvert` (String) unit to convert, by default, it is px.
+- `unitToConvert` (String) unit to convert, by default, it is DP.
 - `viewportWidth` (Number) The width of the viewport.
 - `unitPrecision` (Number) The decimal numbers to allow the vw units to grow to.
 - `propList` (Array) The properties that can change from px to vw.
@@ -119,9 +87,6 @@ Default Options:
         - `['body']` will match `.body-class`
     - If value is regexp, it checks to see if the selector matches the regexp.
         - `[/^body$/]` will match `body` but not `.body`
-- `minPixelValue` (Number) Set the minimum pixel value to replace.
-- `mediaQuery` (Boolean) Allow px to be converted in media queries.
-- `replace` (Boolean) replaces rules containing vw instead of adding fallbacks.
 - `exclude` (Regexp or Array of Regexp) Ignore some files like 'node_modules'
     - If value is regexp, will ignore the matches files.
     - If value is array, the elements of the array are regexp.
@@ -129,122 +94,24 @@ Default Options:
     for example, only files under `src/mobile/` (`include: /\/src\/mobile\//`)
     - If the value is regexp, the matching file will be included, otherwise it will be excluded.
     - If value is array, the elements of the array are regexp.
-- `landscape` (Boolean) Adds `@media (orientation: landscape)` with values converted via `landscapeWidth`.
-- `landscapeUnit` (String) Expected unit for `landscape` option
-- `landscapeWidth` (Number) Viewport width for landscape orientation.
 
 > `exclude` and `include` can be set together, and the intersection of the two rules will be taken.
-
-#### Ignoring
-
-You can use special comments for ignore conversion of single lines:
-- `/* px-to-viewport-ignore-next */` — on a separate line, prevents conversion on the next line.
-- `/* px-to-viewport-ignore */` — after the property on the right, prevents conversion on the same line.
-
-Example:
-```css
-/* example input: */
-.class {
-  /* px-to-viewport-ignore-next */
-  width: 10px;
-  padding: 10px;
-  height: 10px; /* px-to-viewport-ignore */
-  border: solid 2px #000; /* px-to-viewport-ignore */
-}
-
-/* example output: */
-.class {
-  width: 10px;
-  padding: 3.125vw;
-  height: 10px;
-  border: solid 2px #000;
-}
-```
-
-There are several more reasons why your pixels may not convert, the following options may affect this:
-`propList`, `selectorBlackList`, `minPixelValue`, `mediaQuery`, `exclude`, `include`.
 
 #### Use with PostCss configuration file
 
 add to your `postcss.config.js`
 ```js
+const path = require('path')
 module.exports = {
-  plugins: {
-    // ...
-    'postcss-px-to-viewport': {
-      // options
-    }
-  }
+  parser: require('postcss-comment'),
+  plugins: [
+    // must be used before postcss-dp-to-rpx
+    require('postcss-dp-to-rpx')({
+      unitToConvert: "DP",
+      viewportWidth: 414,
+      viewportUnit: "rpx"
+    }),
+    require('@dcloudio/vue-cli-plugin-uni/packages/postcss'),
+  ]
 }
 ```
-
-#### Use with gulp-postcss
-
-add to your `gulpfile.js`:
-```js
-var gulp = require('gulp');
-var postcss = require('gulp-postcss');
-var pxtoviewport = require('postcss-px-to-viewport');
-
-gulp.task('css', function () {
-
-    var processors = [
-        pxtoviewport({
-            viewportWidth: 320,
-            viewportUnit: 'vmin'
-        })
-    ];
-
-    return gulp.src(['build/css/**/*.css'])
-        .pipe(postcss(processors))
-        .pipe(gulp.dest('build/css'));
-});
-```
-
-## Contributing
-
-Please read [Code of Conduct](CODE-OF-CONDUCT.md)
-and [Contributing Guidelines](CONTRIBUTING.md) for submitting pull requests to us.
-
-## Running the tests
-
-In order to run tests, you need to install dev-packages:
-```
-$ npm install
-```
-Then run the tests via npm script:
-```
-$ npm run test
-```
-
-## Changelog
-
-The changelog is [here](CHANGELOG.md).
-
-## Versioning
-
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/evrone/postcss-px-to-viewport/tags). 
-
-## Authors
-
-* [Dmitry Karpunin](https://github.com/KODerFunk) - *Initial work*
-* [Ivan Bunin](https://github.com/chernobelenkiy)
-
-See also the list of [contributors](https://github.com/evrone/postcss-px-to-viewport/contributors) who participated in this project.
-
-## License
-
-This project is licensed under the [MIT License](LICENSE).
-
-## Sponsors
-
-Visit [Evrone](https://evrone.com/) website to get more information about the [projects](https://evrone.com/cases) build.
-
-<a href="https://evrone.com/?utm_source=postcss-px-to-viewport">
-  <img src="https://user-images.githubusercontent.com/417688/34437029-dbfe4ee6-ecab-11e7-9d80-2b274b4149b3.png"
-       alt="Sponsored by Evrone" width="231" />
-</a>
-
-## Acknowledgments
-
-* Hat tip to https://github.com/cuth/postcss-pxtorem/ for inspiring us for this project.

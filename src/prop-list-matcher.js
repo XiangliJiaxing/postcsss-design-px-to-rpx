@@ -55,6 +55,11 @@ var filterPropList = {
   }
 };
 
+/**
+ *
+ * @param propList
+ * @return {function(*=): (boolean|*)}
+ */
 function createPropListMatcher(propList) {
   var hasWild = propList.indexOf('*') > -1;
   var matchAll = (hasWild && propList.length === 1);
